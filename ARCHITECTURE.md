@@ -27,10 +27,10 @@ foveal-dfir/
 │   ├── divergence.py         # T1 ✓  emit AGREE_REAL / AGREE_FP / DISAGREE
 │   ├── boundary_register.py  # T1 ✓  declared uninvestigated / low-confidence areas
 │   ├── actor_cadence.py      # T2 ✓  agent-vs-human signature via inter-event timing
-│   └── falsifier.py          # T2 ✓  pre-registered killer evidence per hypothesis
+│   ├── falsifier.py          # T2 ✓  pre-registered killer evidence per hypothesis
+│   └── responsibility_ledger.py  # T3 ✓  per-claim provenance + divergence + verdict-holder
 ├── prior_fit.py              # T3    "fits the defender's prior too well" anomaly
 ├── stereo_fusion.py          # T3    reconstruct higher-dim attack shape from two views
-├── responsibility_ledger.py  # T3    per-claim provenance + divergence + verdict-holder
 └── run_prototype.py          # entry point
 ```
 

@@ -1,17 +1,24 @@
 """FIND EVIL! enforcement-layer prototype runner.
 
-Loads sample findings (as a self-grading agent would emit them) and runs
-each through the verification pipeline:
+Loads sample findings (as a self-grading investigator would emit them) and
+runs each through the verification pipeline:
 
   1. quarantine + structural staging + independent blind grader
      (verifier.verify) -> the most-conservative verdict.
-  2. divergence annotation (verifier.divergence) -> AGREE_REAL / AGREE_FP /
-     DISAGREE. DISAGREE is the escalate set.
-  3. boundary-register aggregation (verifier.boundary_register) -> explicit
-     list of what was NOT resolved (UNINSPECTED, LOW_CONFIDENCE_BOUNDARY,
-     DECLARED_UNEXAMINED). Items here are never silently dropped.
+  2. divergence annotation (verifier.divergence) -> AGREE_REAL /
+     AGREE_FP / DISAGREE. DISAGREE is the escalate set.
+  3. boundary-register aggregation (verifier.boundary_register) ->
+     explicit list of what was NOT resolved (UNINSPECTED,
+     LOW_CONFIDENCE_BOUNDARY, DECLARED_UNEXAMINED). Items here are never
+     silently dropped.
+  4. responsibility-ledger attribution (verifier.responsibility_ledger)
+     -> per-finding audit record naming each observer's contribution and
+     the verdict_holder. Distributed contribution, traceable
+     accountability.
 
-Prints an A/B table per finding, then the boundary register.
+Prints the A/B table, then the boundary register, then the responsibility
+ledger summary. With --audit-json, writes the full per-finding audit log
+to audit_log.json (the structured execution-log deliverable).
 """
 
 import json
@@ -19,7 +26,7 @@ import pathlib
 import sys
 
 from verifier.verify import verify
-from verifier import divergence, boundary_register
+from verifier import divergence, boundary_register, responsibility_ledger
 
 
 def main() -> None:
@@ -73,13 +80,24 @@ def main() -> None:
     print(f"{changed}/{len(samples)} findings were downgraded by independent enforcement.")
 
     # Boundary register: explicit accounting of what was NOT resolved.
-    # `declared_unexamined` is filled in by the host investigator describing
-    # regions it knowingly skipped (e.g. memory.raw absent, network logs
-    # not collected). On toy samples we have none.
+    # declared_unexamined would be filled in by the host investigator
+    # describing regions it knowingly skipped (e.g. memory.raw absent).
     reg = boundary_register.register(annotated, declared_unexamined=[])
     print()
     for line in boundary_register.summary_lines(reg):
         print(line)
+
+    # Responsibility ledger: distributed contribution, traceable accountability.
+    ledger = responsibility_ledger.audit_log(annotated)
+    print(
+        f"\nResponsibility ledger: {ledger['n_findings']} findings; "
+        f"{ledger['n_downgraded_by_pipeline']} downgraded by pipeline; "
+        f"{ledger['n_escalated_to_human']} escalated to human arbiter."
+    )
+    if "--audit-json" in sys.argv:
+        out = pathlib.Path(__file__).parent / "audit_log.json"
+        out.write_text(json.dumps(ledger, indent=2), encoding="utf-8")
+        print(f"  Full per-finding audit log written to {out}.")
 
     print(
         "\nExpected on toy samples:\n"
