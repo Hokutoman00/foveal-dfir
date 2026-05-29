@@ -23,9 +23,9 @@ foveal-dfir/
 │   ├── grader.py             # T1 ✓  independent blind grader (evidence only, no trace, no claim)
 │   ├── staging.py            # T1 ✓  rule-based source-counting confidence ceiling
 │   ├── quarantine.py         # T1 ✓  structural adversarial-evidence handling
-│   └── verify.py             # T1 ✓  orchestrates the three layers into one verdict
-├── divergence.py             # T1*   emit AGREE_REAL / AGREE_FP / DISAGREE
-├── boundary_register.py      # T1*   declared uninvestigated / low-confidence areas
+│   ├── verify.py             # T1 ✓  orchestrates the three layers into one verdict
+│   ├── divergence.py         # T1 ✓  emit AGREE_REAL / AGREE_FP / DISAGREE
+│   └── boundary_register.py  # T1 ✓  declared uninvestigated / low-confidence areas
 ├── actor_cadence.py          # T2    agent-vs-human signature via inter-event timing
 ├── falsifier.py              # T2    pre-registered killer evidence per hypothesis
 ├── prior_fit.py              # T3    "fits the defender's prior too well" anomaly
@@ -34,7 +34,7 @@ foveal-dfir/
 └── run_prototype.py          # entry point
 ```
 
-Legend: **T1 ✓** = exists today, proven on toy samples. **T1\*** = next, single-day work. **T2** = mid-tier, needed for the demo's agent-vs-agent beat. **T3** = scaffolded; depth scales with demo weight and remaining time.
+Legend: **T1 ✓** = exists today, on toy samples. **T2** = mid-tier, needed for the demo's agent-vs-agent beat. **T3** = scaffolded; depth scales with demo weight and remaining time.
 
 ## How a finding flows through the system
 
