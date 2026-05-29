@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+
+# Logs / scratch
+*.log
+*.tmp
+
+# Local-only coordination / private cross-tab artifacts — never publish
+SHARED_BULLETIN.md
+CROSS_FINDINGS_FROM_SPECA.md
+
+# Secrets — never commit
+*.env
+.env
+.env.*
+credentials.json
+*.key
+*.pem
+id_rsa*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.vscode/
+.idea/
+*.swp
