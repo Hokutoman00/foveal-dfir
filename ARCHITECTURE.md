@@ -15,26 +15,75 @@ The architecture therefore:
 - enforces confidence **in code**, not in the model's report;
 - actively **models the adversary as an agent** and hunts the signatures of agentic action.
 
+## Pipeline diagram
+
+```mermaid
+flowchart TD
+    INV["Investigator<br/>SIFT / Valhuntir agent"] --> F[Finding<br/>+ claimed_confidence]
+
+    F --> Q["quarantine<br/>wrap as untrusted data,<br/>detect injection spans"]
+
+    Q --> S["structural_staging<br/>count independent sources,<br/>check provenance"]
+    Q --> G["blind_grader<br/>separate model,<br/>evidence only,<br/>no investigator trace"]
+
+    S --> V["verify<br/>most-conservative of<br/>investigator / staging / grader"]
+    G --> V
+    F -.claimed.-> V
+
+    V --> D["divergence<br/>AGREE_REAL / AGREE_FP / DISAGREE"]
+
+    D -->|DISAGREE| ESC["escalate to<br/>human arbiter"]
+    D -->|AGREE_*| CONS["consensus verdict"]
+
+    D --> BR["boundary_register<br/>UNINSPECTED / LOW_CONFIDENCE_BOUNDARY /<br/>DECLARED_UNEXAMINED"]
+
+    F -.timeline.-> AC["actor_cadence<br/>MACHINE_PACED? HUMAN_LIKELY?"]
+    F -.evidence text.-> FA["falsifier<br/>check pre-registered killers"]
+    F --> PF["prior_fit<br/>suspiciously normal?"]
+    V --> SF["stereo_fusion<br/>reconstruct kill-chain<br/>from two views"]
+
+    V --> RL["responsibility_ledger<br/>attribute observers,<br/>name verdict_holder"]
+    D --> RL
+    BR --> RL
+    AC --> RL
+    FA --> RL
+    PF --> RL
+    SF --> RL
+
+    RL --> AL[audit_log.json<br/>structured execution log]
+
+    classDef channel fill:#fef3c7,stroke:#d97706,color:#000
+    classDef escalate fill:#fee2e2,stroke:#dc2626,color:#000
+    classDef neweye fill:#dbeafe,stroke:#2563eb,color:#000
+    class Q,G channel
+    class ESC escalate
+    class D,BR,AC,FA,RL,AL,SF,PF neweye
+```
+
+Yellow nodes mark the channel-separation boundary (data channel vs instruction channel). Red marks the escalate set. Blue marks the modules that this submission adds on top of the Valhuntir base.
+
 ## Module layout
 
 ```
 foveal-dfir/
 ├── verifier/
-│   ├── grader.py             # T1 ✓  independent blind grader (evidence only, no trace, no claim)
-│   ├── staging.py            # T1 ✓  rule-based source-counting confidence ceiling
-│   ├── quarantine.py         # T1 ✓  structural adversarial-evidence handling
-│   ├── verify.py             # T1 ✓  orchestrates the three layers into one verdict
-│   ├── divergence.py         # T1 ✓  emit AGREE_REAL / AGREE_FP / DISAGREE
-│   ├── boundary_register.py  # T1 ✓  declared uninvestigated / low-confidence areas
-│   ├── actor_cadence.py      # T2 ✓  agent-vs-human signature via inter-event timing
-│   ├── falsifier.py          # T2 ✓  pre-registered killer evidence per hypothesis
-│   └── responsibility_ledger.py  # T3 ✓  per-claim provenance + divergence + verdict-holder
-├── prior_fit.py              # T3    "fits the defender's prior too well" anomaly
-├── stereo_fusion.py          # T3    reconstruct higher-dim attack shape from two views
-└── run_prototype.py          # entry point
+│   ├── grader.py                 # T1 ✓  independent blind grader (evidence only, no trace, no claim)
+│   ├── staging.py                # T1 ✓  rule-based source-counting confidence ceiling
+│   ├── quarantine.py             # T1 ✓  structural adversarial-evidence handling
+│   ├── verify.py                 # T1 ✓  orchestrates the three layers into one verdict
+│   ├── divergence.py             # T1 ✓  emit AGREE_REAL / AGREE_FP / DISAGREE
+│   ├── boundary_register.py      # T1 ✓  declared uninvestigated / low-confidence areas
+│   ├── actor_cadence.py          # T2 ✓  agent-vs-human signature via inter-event timing
+│   ├── falsifier.py              # T2 ✓  pre-registered killer evidence per hypothesis
+│   ├── responsibility_ledger.py  # T3 ✓  per-claim provenance + divergence + verdict-holder
+│   ├── prior_fit.py              # T3 ✓  "fits the defender's prior too well" anomaly
+│   └── stereo_fusion.py          # T3 ✓  reconstruct higher-dim attack shape from two views
+├── run_prototype.py              # entry point
+├── ACCURACY_REPORT_TEMPLATE.md   # per-case report template
+└── DEMO_SCRIPT.md                # 5-minute demo screenplay
 ```
 
-Legend: **T1 ✓** = exists today, on toy samples. **T2** = mid-tier, needed for the demo's agent-vs-agent beat. **T3** = scaffolded; depth scales with demo weight and remaining time.
+Legend: **T1 ✓** = exists today, on toy samples. **T2 ✓** / **T3 ✓** = scaffolded with synthetic-data tests; real-case integration arrives with the sample dataset.
 
 ## How a finding flows through the system
 

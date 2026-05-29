@@ -47,11 +47,11 @@ Expected output:
 | Item                          | Where                       |
 |-------------------------------|-----------------------------|
 | Public repository             | this repo                   |
-| Architecture diagram          | [ARCHITECTURE.md](ARCHITECTURE.md) |
+| Architecture diagram          | [ARCHITECTURE.md](ARCHITECTURE.md) (Mermaid pipeline diagram) |
 | Try-it-out instructions       | this README                 |
-| Structured execution log      | generated per run           |
-| Accuracy report               | generated per case          |
-| 5-minute demo video           | linked at submission        |
+| Structured execution log      | `audit_log.json` (run `python run_prototype.py --audit-json`) |
+| Accuracy report               | template: [ACCURACY_REPORT_TEMPLATE.md](ACCURACY_REPORT_TEMPLATE.md); filled per case |
+| 5-minute demo video           | screenplay: [DEMO_SCRIPT.md](DEMO_SCRIPT.md); video linked at submission |
 | Dataset documentation         | generated per case          |
 | MIT license                   | [LICENSE](LICENSE)          |
 
