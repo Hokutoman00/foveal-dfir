@@ -51,7 +51,7 @@ Expected output:
 | Try-it-out instructions       | this README                 |
 | Structured execution log      | `audit_log.json` (run `python run_prototype.py --audit-json`) |
 | Accuracy report               | template: [ACCURACY_REPORT_TEMPLATE.md](ACCURACY_REPORT_TEMPLATE.md); filled per case |
-| 5-minute demo video           | screenplay: [DEMO_SCRIPT.md](DEMO_SCRIPT.md); video linked at submission |
+| 5-minute demo video           | **[Watch on YouTube](https://youtu.be/1zWZS-58hqY)** (unlisted, 2:47); screenplay [DEMO_SCRIPT.md](DEMO_SCRIPT.md); reproducer [demo/produce_demo.py](demo/produce_demo.py) |
 | Dataset documentation         | generated per case          |
 | MIT license                   | [LICENSE](LICENSE)          |
 
