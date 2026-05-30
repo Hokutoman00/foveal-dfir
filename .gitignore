@@ -33,3 +33,5 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+cases_outputs/
+cases_data/
