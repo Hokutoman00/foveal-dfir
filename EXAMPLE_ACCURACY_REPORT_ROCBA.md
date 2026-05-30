@@ -146,6 +146,64 @@ The synthetic toy samples (`samples/findings.json`, exercised by `run_prototype.
 A second 30-finding subset of `netscan` was run with the grader on:
 30 findings ingested, 0 downgraded, 30 `AGREE_REAL`, all consensus verdicts `INDICATED`. The investigator and grader agree because `netscan` rows literally show the connection (proto, addresses, ports, state); the rule does not need to trigger because nothing is over-claimed.
 
+## Disk-side pass (entity-merged ingest on `rocba-cdrive.E01`)
+
+A second pass against the disk image (`rocba-cdrive.E01`, 81 GB NTFS partition image of Fred Rocba's `C:` drive). Sleuth Kit `fls -f ntfs` listings were extracted from four locations (`Users/fredr/Google Drive/`, `Users/fredr/iCloudDrive/`, `Users/fredr/Downloads/`, `Windows/Prefetch/`) and fed through [verifier/disk_ingest.py](verifier/disk_ingest.py), which emits findings keyed by **entity** (e.g. `cloud_sync.google_drive`, `cloud_sync.dropbox`). When the same entity is observed by two different plugin sources, `merge_by_id()` accumulates artifacts on a single finding before the structural staging layer counts distinct sources.
+
+This is the symmetric counterpart of the memory pass: the memory pass demonstrated the rule downgrading single-source `CONFIRMED` claims; the disk pass demonstrates the rule **permitting** `CONFIRMED` claims when the structure justifies it.
+
+### Findings ingested
+
+8 entity-merged findings total. The entity-merged column reports the count of distinct artifact sources contributing to each finding.
+
+| Finding id                                            | Sources | Claimed | Verified (no grader) | Verified (grader on) |
+|-------------------------------------------------------|---------|---------|----------------------|----------------------|
+| `cloud_sync.google_drive`                             | 2       | CONFIRMED | **CONFIRMED**       | INDICATED            |
+| `cloud_sync.dropbox`                                  | 2       | CONFIRMED | **CONFIRMED**       | INDICATED            |
+| `cloud_sync.icloud`                                   | 2       | CONFIRMED | **CONFIRMED**       | **CONFIRMED**        |
+| `cloud_sync.onedrive`                                 | 1       | CONFIRMED | INDICATED (cap)      | INDICATED            |
+| `sensitive_file.in_cloud.SRL-Offer.pdf`               | 1       | CONFIRMED | INDICATED (cap)      | INDICATED            |
+| `sensitive_file.in_cloud.VIBRANIUM.docx`              | 1       | CONFIRMED | INDICATED (cap)      | INDICATED            |
+| `sensitive_file.in_cloud.HighFiveBusinessPlanV20.docx`| 1       | CONFIRMED | INDICATED (cap)      | INDICATED            |
+| `sensitive_file.in_cloud.Firedam.xls`                 | 1       | CONFIRMED | INDICATED (cap)      | INDICATED            |
+
+### What this shows (the sharp result)
+
+- **The structural rule permits as well as caps.** Three entities (`cloud_sync.google_drive`, `cloud_sync.dropbox`, `cloud_sync.icloud`) carry artifacts from two distinct plugin sources each (filesystem AND Prefetch). The structural ceiling allows `CONFIRMED` for these — they keep their label in the no-grader pass. The single-source entities are capped at `INDICATED`. The rule is **fair**: it caps when the evidence is single-source, it permits when the evidence is multi-source. Together with the memory pass (16 single-source `CONFIRMED` all downgraded), the disk pass demonstrates the rule **in both directions**, on real evidence.
+
+- **The grader is an independent check, not a rubber-stamp.** With the blind grader enabled, only **`cloud_sync.icloud`** survives at `CONFIRMED`. The other two structurally-eligible entities (`google_drive`, `dropbox`) are pushed back to `INDICATED` by the grader because the grader independently judges that the *observation* ("sync folder present", "installer present") is directly visible in only one of the two artifacts; the Prefetch artifact shows the *executable ran*, not the folder/installer presence. The grader is reading the artifact-vs-claim relationship strictly, exactly as the rubric requires.
+
+- **The three-layer story is complete on real evidence:**
+  1. **Investigator** claims `CONFIRMED` on all 8.
+  2. **Structural staging** (in code) permits `CONFIRMED` on 3 (multi-source) and caps 5 (single-source) at `INDICATED`.
+  3. **Blind grader** (evidence-only, no claim shown, separate model `qwen2.5:7b`) independently re-judges; on this pass it pushes back two of the three structurally-eligible findings to `INDICATED`.
+  4. **Consensus verdict** is the most-conservative of (investigator, structural, grader). Only `cloud_sync.icloud` survives at `CONFIRMED` — the one finding where all three layers agreed.
+
+This is the IR-Accuracy / Constraint-Implementation / Audit-Trail-Quality story in one slice of real data: the README rule everyone writes (≥ 2 independent sources) is a real constraint enforced in code; it permits and it caps; and the grader is a third independent gate on top.
+
+### Reproduce
+
+```bash
+# Mount the E01 (FUSE) and extract fls listings:
+sudo ewfmount /var/findevil/cases/rocba/rocba.E01 /mnt/ewf
+mkdir -p cases_data/rocba_disk
+for inode_dest in \
+  168221:googledrive_listing.txt \
+  134983:icloud_listing.txt \
+  103054:downloads_listing.txt \
+  154571:prefetch_listing.txt; do
+  inode=${inode_dest%%:*}; dest=${inode_dest##*:}
+  sudo fls -f ntfs /mnt/ewf/ewf1 $inode > cases_data/rocba_disk/$dest
+done
+
+# Run the disk pipeline:
+python -m cases.run_rocba_disk \
+  --findings-dir cases_data/rocba_disk \
+  --out-dir cases_outputs/rocba_disk_grader
+
+cat cases_outputs/rocba_disk_grader/summary.json
+```
+
 ## What this run does NOT yet show
 
 The pillars NOT yet exercised on the Rocba memory case:
