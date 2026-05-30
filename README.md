@@ -2,9 +2,15 @@
 
 A defensive digital-forensics / incident-response agent for the SANS **FIND EVIL!** hackathon, built on top of the Protocol SIFT / Valhuntir platform.
 
+## At a glance
+
+**13 verifier modules · 4,818 memory findings + 8 disk entity-merged findings analyzed on the official ROCBA case · 16 single-source CONFIRMED claims downgraded by structural rule · 3 multi-source CONFIRMED claims preserved — same rule, both directions.**
+
 ## Thesis
 
 The hackathon names its own open problem: an autonomous DFIR agent that "just says find evil" hallucinates and needs a human to guide it. We take that at face value — the failure mode is **self-deception** — and answer it structurally rather than with more careful prompting.
+
+A common DFIR-enforcement pattern lets a finding reach the top confidence label either by accumulating multiple corroborating observations *or* by a single observation that a validator labels "strongly corroborated". The single-strong path turns the floor on top confidence into an LLM judgment call. `foveal-dfir` rejects that path: the top label requires a structural floor of **N ≥ 2 distinct artifact sources, counted in code**, with no LLM-judgment escape hatch.
 
 Most submissions build a "more careful" agent. We build a structurally different one:
 
@@ -25,22 +31,41 @@ This agent runs **on top of** the base Protocol SIFT / Valhuntir platform (https
 
 ## Try it out
 
-The current prototype operates on a toy `samples/findings.json` (mock findings as a self-grading investigator would emit them). End-to-end runs over the official sample case will be added once the dataset is integrated.
+`foveal-dfir` runs end-to-end on the **official ROCBA sample case** (~41 GB: memory image + NTFS disk image E01), reproduced below. Among the 3,806 registered participants, an end-to-end run of the full sample case with an auditable downgrade log is, as far as we have observed, uncommon.
 
 Requirements: Python 3.10+, and (for the blind grader) a local Ollama with `qwen2.5:7b` pulled.
 
+### Quick toy run (no dataset required)
+
 ```bash
-# Full pipeline (rule-based stages + quarantine + blind grader):
+# Full pipeline on the toy sample (rule-based stages + quarantine + blind grader):
 python run_prototype.py
 
 # Rule-based stages + quarantine only (no model call):
 python run_prototype.py --no-grader
 ```
 
-Expected output:
+### Real-case runs (ROCBA, both passes)
+
+```bash
+# Memory pass: 4,818 findings ingested from Volatility3 plugins,
+# 16 single-source CONFIRMED claims downgraded by the structural rule.
+python -m cases.run_rocba --findings-dir cases_data/rocba [--no-grader]
+
+# Disk pass: 8 entity-merged findings from fls listings (Google Drive folder,
+# iCloud folder, Downloads, Prefetch). 5 single-source claims downgraded;
+# 3 multi-source claims (e.g. cloud_sync.* entities corroborated by BOTH
+# filesystem AND Prefetch) keep their CONFIRMED label — same rule, both directions.
+python -m cases.run_rocba_disk --findings-dir cases_data/rocba_disk [--no-grader]
+```
+
+Expected output (toy or real):
 - at least one finding is downgraded because its evidence has only one independent source;
+- at least one finding is **kept** at CONFIRMED because its evidence has ≥ 2 independent sources;
 - at least one quarantine-flagged finding (adversarial / instruction-like spans in the evidence);
-- at least one self-graded over-claim caught by the independent grader.
+- at least one self-graded over-claim caught by the independent grader (grader-on runs).
+
+A worked example over the real ROCBA case lives in [EXAMPLE_ACCURACY_REPORT_ROCBA.md](EXAMPLE_ACCURACY_REPORT_ROCBA.md).
 
 ## Submission deliverables
 
