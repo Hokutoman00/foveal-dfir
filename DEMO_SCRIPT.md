@@ -124,6 +124,6 @@ Pillar demonstrated: *responsibility ledger.*
 
 ## Production notes
 
-- The Tier-1 demonstration (Scenes 2–3) is reproducible today from `python run_prototype.py` on the toy `samples/findings.json`. Scenes 4–6 require the official sample case for the cadence statistics and the full kill-chain reconstruction to be meaningful.
+- Scenes 2–3 are reproducible from `python run_prototype.py` on the toy `samples/findings.json`. The deeper beats (Scenes 4–6) are reproducible end-to-end on the official ROCBA case: `python -m cases.run_rocba` for the memory pass (4,818 findings, 16 downgraded) and `python -m cases.run_rocba_disk` for the disk pass (8 entity-merged findings, 3 multi-source CONFIRMED preserved). The recorded 5-minute video lives at https://youtu.be/1zWZS-58hqY .
 - All on-screen artifacts in this script come from real pipeline output, not mocks. The JSON shown is what `audit_log.json` actually contains.
 - Length budget: 30 s of slack across the six scenes — narration may run 4 min 30 s if cut tight, leaving 30 s for the title and outro.

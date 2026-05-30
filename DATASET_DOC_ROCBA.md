@@ -113,7 +113,7 @@ Total candidate findings ingested: **4,818**. See [EXAMPLE_ACCURACY_REPORT_ROCBA
 
 ## What this dataset documentation does NOT cover
 
-- The **disk side** (`rocba-cdrive.e01`, 22.1 GB). The disk image is queued for the next pass (Sleuth Kit / registry / event-log extraction), at which point a follow-on dataset entry will be added.
+- ~~The **disk side** (`rocba-cdrive.e01`, 22.1 GB) is queued for the next pass~~ — **resolved**. The disk pass is integrated via `verifier/disk_ingest.py` (parses Sleuth Kit `fls -f ntfs` listings from the user's Google Drive folder, iCloud folder, Downloads, and Windows Prefetch) and `cases/run_rocba_disk.py`. The entity-merged ingest unions findings sharing an id across sources, so the structural rule sees ≥2 distinct artifact sources for the multi-source entities (e.g. `cloud_sync.google_drive`, `cloud_sync.icloud`). Run with `python -m cases.run_rocba_disk --findings-dir cases_data/rocba_disk [--no-grader]`; the worked example is in [EXAMPLE_ACCURACY_REPORT_ROCBA.md](EXAMPLE_ACCURACY_REPORT_ROCBA.md).
 - **Ground truth**. The hackathon brief is the only narrative we have; no ground-truth labels accompany the share at this writing. The accuracy report's false-positive matrix is therefore left blank in the baseline run; it will be populated when ground truth is available (or against a community-derived consensus).
 - **Cross-case generalization**. Numbers above describe the ROCBA case only; the `Compromised APT Attack Scenarios` folder (`SRL-2015`, `SRL-2018`) is out of scope for this run.
 

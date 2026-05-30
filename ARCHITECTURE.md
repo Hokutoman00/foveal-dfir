@@ -67,23 +67,30 @@ Yellow nodes mark the channel-separation boundary (data channel vs instruction c
 ```
 foveal-dfir/
 ├── verifier/
-│   ├── grader.py                 # T1 ✓  independent blind grader (evidence only, no trace, no claim)
-│   ├── staging.py                # T1 ✓  rule-based source-counting confidence ceiling
-│   ├── quarantine.py             # T1 ✓  structural adversarial-evidence handling
-│   ├── verify.py                 # T1 ✓  orchestrates the three layers into one verdict
-│   ├── divergence.py             # T1 ✓  emit AGREE_REAL / AGREE_FP / DISAGREE
-│   ├── boundary_register.py      # T1 ✓  declared uninvestigated / low-confidence areas
-│   ├── actor_cadence.py          # T2 ✓  agent-vs-human signature via inter-event timing
-│   ├── falsifier.py              # T2 ✓  pre-registered killer evidence per hypothesis
-│   ├── responsibility_ledger.py  # T3 ✓  per-claim provenance + divergence + verdict-holder
-│   ├── prior_fit.py              # T3 ✓  "fits the defender's prior too well" anomaly
-│   └── stereo_fusion.py          # T3 ✓  reconstruct higher-dim attack shape from two views
-├── run_prototype.py              # entry point
+│   ├── grader.py                 # independent blind grader (evidence only, no trace, no claim)
+│   ├── staging.py                # rule-based source-counting confidence ceiling
+│   ├── quarantine.py             # structural adversarial-evidence handling
+│   ├── verify.py                 # orchestrates the three layers into one verdict
+│   ├── divergence.py             # emit AGREE_REAL / AGREE_FP / DISAGREE
+│   ├── boundary_register.py      # declared uninvestigated / low-confidence areas
+│   ├── actor_cadence.py          # agent-vs-human signature via inter-event timing
+│   ├── falsifier.py              # pre-registered killer evidence per hypothesis
+│   ├── responsibility_ledger.py  # per-claim provenance + divergence + verdict-holder
+│   ├── prior_fit.py              # "fits the defender's prior too well" anomaly
+│   ├── stereo_fusion.py          # reconstruct higher-dim attack shape from two views
+│   ├── case_ingest.py            # convert Volatility3 plugin JSON into findings (memory pass)
+│   └── disk_ingest.py            # convert Sleuth Kit fls listings into entity-merged findings (disk pass)
+├── cases/
+│   ├── run_rocba.py              # end-to-end driver: memory pass on the official ROCBA case
+│   └── run_rocba_disk.py         # end-to-end driver: disk pass (entity-merged) on the ROCBA E01
+├── run_prototype.py              # toy-sample entry point
 ├── ACCURACY_REPORT_TEMPLATE.md   # per-case report template
+├── EXAMPLE_ACCURACY_REPORT_ROCBA.md  # worked example over the real ROCBA case
+├── DATASET_DOC_ROCBA.md          # ROCBA case description and provenance
 └── DEMO_SCRIPT.md                # 5-minute demo screenplay
 ```
 
-Legend: **T1 ✓** = exists today, on toy samples. **T2 ✓** / **T3 ✓** = scaffolded with synthetic-data tests; real-case integration arrives with the sample dataset.
+All 13 verifier modules run end-to-end on the official ROCBA case: 4,818 memory findings + 8 disk entity-merged findings; the structural rule downgrades 16 single-source CONFIRMED claims and preserves 3 multi-source CONFIRMED claims — same rule, both directions.
 
 ## How a finding flows through the system
 
