@@ -2,6 +2,8 @@
 
 A defensive digital-forensics / incident-response agent for the SANS **FIND EVIL!** hackathon, built on top of the Protocol SIFT / Valhuntir platform.
 
+> **Quick proof — zero dependencies, 5 seconds:** `git clone https://github.com/Hokutoman00/foveal-dfir && cd foveal-dfir && python run_prototype.py --no-grader` → A/B verdict table, quarantine flags, kill-chain reconstruction, and prior-fit anomaly scan. Python 3.10+ stdlib only. No 41 GB disk image, no Ollama, no API key.
+
 ## At a glance
 
 **13 verifier modules · 4,818 ROCBA memory findings + 8 disk entity-merged findings analyzed · 16 single-source CONFIRMED claims downgraded to INDICATED · 3 disk claims permitted as CONFIRMED by structure · 1 disk claim survives CONFIRMED with the blind grader on — same rule, both directions.**
