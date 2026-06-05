@@ -60,7 +60,7 @@ The structural decision that *would* have been silently lost without the boundar
 
 ## Adversarial-evidence handling
 
-Zero quarantine flags fired on this run. This is expected: Volatility plugin output is structured JSON without the kinds of free-form attacker-controlled strings (registry values, log lines, filenames) that the quarantine detector is tuned for. A disk-image pass (the `.E01` evidence side, coming next) will exercise the quarantine layer on registry- and event-log-derived strings.
+Zero quarantine flags fired on this run. This is expected: Volatility plugin output is structured JSON without the kinds of free-form attacker-controlled strings (registry values, log lines, filenames) that the quarantine detector is tuned for. The disk-side pass (entity-merged `fls` listings) is now implemented; quarantine at full registry- and event-log-string scale remains a future hardening step beyond this submission.
 
 ## Hallucinations / unsupported claims (grader axis)
 
