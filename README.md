@@ -8,6 +8,16 @@ A defensive digital-forensics / incident-response agent for the SANS **FIND EVIL
 
 **13 verifier modules · 4,818 ROCBA memory findings + 8 disk entity-merged findings analyzed · 16 single-source CONFIRMED claims downgraded to INDICATED · 3 disk claims permitted as CONFIRMED by structure · 1 disk claim survives CONFIRMED with the blind grader on — same rule, both directions.**
 
+## The evil that was found
+
+Running `foveal-dfir` end-to-end on the ROCBA evidence — without prior knowledge of the scenario — produces the following verdict on the central IP-theft hypothesis:
+
+> **Fred Rocba staged sensitive corporate IP files to iCloud Drive, corroborated by both filesystem listing and Prefetch execution evidence, surviving structural rule enforcement and independent blind-grader scrutiny. The four identified files — `SRL-Offer.pdf`, `VIBRANIUM.docx`, `HighFiveBusinessPlanV20.docx`, `Firedam.xls` — appear in the `cloud_sync.icloud` entity with two independent artifact sources. Confidence: `CONFIRMED`.**
+
+The pipeline also falsified two alternative hypotheses against the disk evidence: credential theft (no harvesting tool found) and lateral movement (no remote-execution artifact found). The actor-cadence assessor reports `AMBIGUOUS` — consistent with a human operator whose automatic overnight sync slightly contaminates the work-hour signal.
+
+This is what structural enforcement buys: not a prettier report, but a **verifiable, auditable claim** that the confidence label is supported by the artifact structure and survives an independent grader who never saw the analyst's reasoning.
+
 ## Thesis
 
 The hackathon names its own open problem: an autonomous DFIR agent that "just says find evil" hallucinates and needs a human to guide it. We take that at face value — the failure mode is **self-deception** — and answer it structurally rather than with more careful prompting.
@@ -29,7 +39,9 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the module layout, how the layers com
 
 ## Relationship to Valhuntir / Protocol SIFT
 
-This agent runs **on top of** the base Protocol SIFT / Valhuntir platform (https://github.com/AppliedIR/sift-mcp). Valhuntir provides the SANS SIFT tool surface, MCP routing, platform-level audit trail, and case management. `foveal-dfir` adds an independent verification + active-defense layer that does **not** trust the investigating agent's self-assessment.
+`foveal-dfir` is a **standalone enforcement pipeline** that runs on any finding input — it does not require Valhuntir to be installed or running. The real-case runs (`cases/run_rocba.py`, `cases/run_rocba_disk.py`) ingest Volatility3 JSON and Sleuth Kit `fls` listings directly.
+
+The optional integration point: `foveal-dfir` can consume findings emitted by the base Protocol SIFT / Valhuntir platform (https://github.com/AppliedIR/sift-mcp), which provides the SANS SIFT tool surface, MCP routing, and case management. When used together, `foveal-dfir` is the independent verification layer that does **not** trust the investigating agent's self-assessment. When used standalone, it processes any JSON findings in the documented schema.
 
 ## Try it out
 
