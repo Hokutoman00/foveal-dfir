@@ -4,19 +4,17 @@ A defensive digital-forensics / incident-response agent for the SANS **FIND EVIL
 
 ## At a glance
 
-**Independent review flips ~48% of single-reviewer verdicts** (empirically validated across two domains — see [CROSS_FINDINGS_FROM_SPECA.md](CROSS_FINDINGS_FROM_SPECA.md)).
-
 **13 verifier modules · 4,818 ROCBA memory findings + 8 disk entity-merged findings analyzed · 16 single-source CONFIRMED claims downgraded to INDICATED · 3 disk claims permitted as CONFIRMED by structure · 1 disk claim survives CONFIRMED with the blind grader on — same rule, both directions.**
 
 ## The evil that was found
 
 Running `foveal-dfir` end-to-end on the ROCBA evidence — without prior knowledge of the scenario — produces the following verdict on the central IP-theft hypothesis:
 
-> **Fred Rocba staged sensitive corporate IP files to iCloud Drive, corroborated by both filesystem listing and Prefetch execution evidence, surviving structural rule enforcement and independent blind-grader scrutiny. The four identified files — `SRL-Offer.pdf`, `VIBRANIUM.docx`, `HighFiveBusinessPlanV20.docx`, `Firedam.xls` — appear in the `cloud_sync.icloud` entity with two independent artifact sources. Confidence: `CONFIRMED`.**
+> **Fred Rocba's workstation contains personal cloud-sync infrastructure, and SRL-relevant documents were found in his personal Google Drive folder. The cloud-sync infrastructure is corroborated by filesystem listings and Prefetch execution evidence, while the individual file claims are honestly capped at `INDICATED` because each file is currently single-source. The four identified files are `SRL-Offer.pdf`, `VIBRANIUM.docx`, `HighFiveBusinessPlanV20.docx`, and `Firedam.xls`.**
 
 The pipeline also falsified two alternative hypotheses against the disk evidence: credential theft (no harvesting tool found) and lateral movement (no remote-execution artifact found). The actor-cadence assessor reports `AMBIGUOUS` — consistent with a human operator whose automatic overnight sync slightly contaminates the work-hour signal.
 
-This is what structural enforcement buys: not a prettier report, but a **verifiable, auditable claim** that the confidence label is supported by the artifact structure and survives an independent grader who never saw the analyst's reasoning.
+This is what structural enforcement buys: not a prettier report, but a **verifiable, auditable claim** that separates the confirmed infrastructure from the indicated file-level claims instead of blurring them into one overconfident story.
 
 ## Thesis
 
@@ -67,6 +65,14 @@ python run_prototype.py --no-grader
 # GTG-1002-style adversarial evidence: two-source claim capped by quarantine:
 python run_prototype.py --sample samples/adversarial_findings.json --no-grader
 ```
+
+### One-command judge demo (ROCBA disk evidence)
+
+```bash
+python -m cases.run_judge_demo --findings-dir cases_data/rocba_disk --no-grader
+```
+
+This produces `cases_outputs/judge_demo/report.md`: a short autonomous case loop that declares the questions, ingests the available evidence, checks pre-registered falsifiers, names the evil found, and lists the hypotheses rejected.
 
 ### Real-case runs (ROCBA, both passes)
 
@@ -132,11 +138,12 @@ A worked example over the real ROCBA case lives in [EXAMPLE_ACCURACY_REPORT_ROCB
 | Public repository             | this repo                   |
 | Judge packet                  | [JUDGE_PACKET.md](JUDGE_PACKET.md) |
 | Strict scorecard              | [SCORECARD.md](SCORECARD.md) |
+| One-command judge demo        | `python -m cases.run_judge_demo --findings-dir cases_data/rocba_disk --no-grader` |
 | Architecture diagram          | [ARCHITECTURE.md](ARCHITECTURE.md) (Mermaid pipeline diagram) |
 | Try-it-out instructions       | this README                 |
 | Structured execution log      | `audit_log.json` (run `python run_prototype.py --audit-json`) |
 | Accuracy report               | template: [ACCURACY_REPORT_TEMPLATE.md](ACCURACY_REPORT_TEMPLATE.md); filled per case |
-| 5-minute demo video           | **[Watch on YouTube](https://youtu.be/1zWZS-58hqY)** (unlisted, 2:47); screenplay [DEMO_SCRIPT.md](DEMO_SCRIPT.md); reproducer [demo/produce_demo.py](demo/produce_demo.py) |
+| 5-minute demo video           | **[Watch on YouTube](https://youtu.be/uqGDw6j94yg)** (unlisted, 2:46); screenplay [DEMO_SCRIPT.md](DEMO_SCRIPT.md); reproducer [demo/produce_demo.py](demo/produce_demo.py) |
 | Dataset documentation         | generated per case          |
 | MIT license                   | [LICENSE](LICENSE)          |
 
