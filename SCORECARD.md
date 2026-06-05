@@ -32,9 +32,9 @@ The score crosses 90 because the project now has:
 
 ## First-place probability estimate
 
-After the one-command judge demo and overclaim correction, the first-place estimate is **36-44%**, with a center estimate of **about 40-41%**, if the submitted README/Judge Packet are the primary review surface and judges run or read the generated judge report.
+After debate and self-critique (confirmed by cross-review), the first-place estimate is **30-38%**, center estimate **34%**. The earlier 36-44% estimate contained confirmation bias from self-assessment; the corrected range accounts for unknown competitor quality and the demo video being shorter than the 5-minute requirement.
 
-The lower tail remains real: without a refreshed ROCBA-focused video, a judge who only watches the old toy-data video could still score it closer to **34-39%** first-place probability.
+Key uncertainties: competitor landscape is unknown; judges may weight accuracy metrics differently from methodology; the demo video (2:46) is shorter than the 5-minute spec.
 
 ## Remaining gaps
 
