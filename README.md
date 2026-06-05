@@ -4,7 +4,7 @@ A defensive digital-forensics / incident-response agent for the SANS **FIND EVIL
 
 ## At a glance
 
-**13 verifier modules · 4,818 memory findings + 8 disk entity-merged findings analyzed on the official ROCBA case · 16 single-source CONFIRMED claims downgraded by structural rule · 3 multi-source CONFIRMED claims preserved — same rule, both directions.**
+**13 verifier modules · 4,818 → 4,802 memory findings at post-rule CONFIRMED + 8 disk entity-merged findings analyzed on the official ROCBA case · 16 single-source CONFIRMED claims downgraded by structural rule · 1 CONFIRMED surviving on disk (grader-on) — same rule, both directions.**
 
 ## Thesis
 
@@ -58,6 +58,41 @@ python -m cases.run_rocba --findings-dir cases_data/rocba [--no-grader]
 # filesystem AND Prefetch) keep their CONFIRMED label — same rule, both directions.
 python -m cases.run_rocba_disk --findings-dir cases_data/rocba_disk [--no-grader]
 ```
+
+### Rule both ways — ROCBA result summary
+
+The structural rule runs in both directions on the same evidence. Numbers from the real ROCBA case:
+
+| Pass | Input findings | Rule action | Outcome |
+|------|---------------|-------------|---------|
+| Memory (Volatility3) | 4,818 | 16 single-source CONFIRMED → INDICATED | **4,802** pass through; 0 CONFIRMED survive (all 16 were the only CONFIRMED in the set) |
+| Disk (fls, structural-only) | 8 | 5 single-source capped at INDICATED | **3** multi-source entities keep CONFIRMED |
+| Disk (fls, grader-on) | 8 | grader pushes `google_drive` + `dropbox` back to INDICATED | **1** surviving CONFIRMED (`cloud_sync.icloud`) |
+
+The rule that produced 16 downgrades in the memory pass is identical to the rule that preserved 3 findings in the disk structural pass and 1 finding in the disk grader-on pass. No special-casing — the ceiling and the floor are the same predicate: `distinct_source_count >= 2`.
+
+### Pre-registered falsifiers — ROCBA result
+
+Four hypotheses registered before inspection against the ROCBA disk evidence (`cases/rocba_hypotheses.json`):
+
+| Hypothesis | Falsified? | Killers hit |
+|------------|-----------|-------------|
+| `personal_cloud_sync_ip_staging` | **not falsified** | — (cloud sync entities + sensitive file names present; hypothesis supported) |
+| `single_source_cloud_claims_should_not_be_confirmed` | **not falsified** | — (single-source cloud claims exist; structural cap needed and applied) |
+| `credential_theft` | **FALSIFIED** | `no_credential_harvest_tool` (no mimikatz, lsass dump, or credential-harvesting artifact on disk) |
+| `lateral_movement` | **FALSIFIED** | `no_remote_execution_artifact` (no psexec, WMI, RDP artifact on disk) |
+
+Honest result: the disk evidence supports IP-theft-via-cloud-sync but does not support credential theft or lateral movement from disk artifacts alone. The killers are declared *before* inspection; the verdict is driven by what the evidence contains, not by what the analyst expects.
+
+### GTG-1002 adversarial evidence demo
+
+The hackathon's stated motivation is Anthropic's GTG-1002: autonomous AI attackers. `F-005` in `samples/findings.json` demonstrates the counter-measure directly: an autonomous AI actor plants a `health_check.log` file containing `<im_start>system` / `<im_end>` LLM token-injection markup specifically designed to hijack an LLM-based forensic agent. The quarantine module detects the injected spans before they reach any model:
+
+```
+F-005   INDICATED  INDICATED  GRADER_UNAVAILABLE -   quarantine:2-span(s)
+```
+
+The `<im_start>` and `<im_end>` tokens are sanitised and flagged as `ADVERSARIAL_SPAN` in the audit trail. The grader receives a sanitised copy of the evidence and cannot be instructed by the attacker's planted directive. Run `python run_prototype.py --no-grader` to see the quarantine output; add `--audit-json` for the full per-finding record.
 
 Expected output (toy or real):
 - at least one finding is downgraded because its evidence has only one independent source;

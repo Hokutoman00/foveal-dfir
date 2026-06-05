@@ -21,20 +21,31 @@ ledger summary. With --audit-json, writes the full per-finding audit log
 to audit_log.json (the structured execution-log deliverable).
 """
 
+import argparse
 import json
 import pathlib
-import sys
 
 from verifier.verify import verify
 from verifier import divergence, boundary_register, responsibility_ledger
 
 
 def main() -> None:
-    use_grader = "--no-grader" not in sys.argv
-    path = pathlib.Path(__file__).parent / "samples" / "findings.json"
+    ap = argparse.ArgumentParser(description="Run foveal-dfir on a sample findings file.")
+    ap.add_argument("--sample", default="samples/findings.json",
+                    help="Path to a sample findings JSON file.")
+    ap.add_argument("--no-grader", action="store_true",
+                    help="Skip the blind grader.")
+    ap.add_argument("--audit-json", action="store_true",
+                    help="Write the full per-finding audit log to audit_log.json.")
+    args = ap.parse_args()
+
+    use_grader = not args.no_grader
+    path = pathlib.Path(args.sample)
+    if not path.is_absolute():
+        path = pathlib.Path(__file__).parent / path
     samples = json.loads(path.read_text(encoding="utf-8"))
 
-    print(f"\nIndependent enforcement (grader={'on' if use_grader else 'OFF'})\n")
+    print(f"\nIndependent enforcement (sample={path.name}, grader={'on' if use_grader else 'OFF'})\n")
     header = (
         f"{'ID':<7} {'CLAIMED':<10} {'VERIFIED':<10} {'DIVERGENCE':<18} "
         f"{'CHANGED':<10} NOTES"
@@ -94,17 +105,16 @@ def main() -> None:
         f"{ledger['n_downgraded_by_pipeline']} downgraded by pipeline; "
         f"{ledger['n_escalated_to_human']} escalated to human arbiter."
     )
-    if "--audit-json" in sys.argv:
+    if args.audit_json:
         out = pathlib.Path(__file__).parent / "audit_log.json"
         out.write_text(json.dumps(ledger, indent=2), encoding="utf-8")
         print(f"  Full per-finding audit log written to {out}.")
 
     print(
-        "\nExpected on toy samples:\n"
-        "  F-001 unchanged (legit, >=2 independent sources)        -> AGREE_REAL\n"
-        "  F-002 downgraded (only one content-bearing source)      -> typically AGREE_FP or DISAGREE\n"
-        "  F-003 quarantine-flagged (instruction span in evidence) -> DISAGREE or capped\n"
-        "  F-004 over-claim caught by independent grader           -> DISAGREE (the rescue moment)\n"
+        "\nExpected signal:\n"
+        "  - single-source overclaims are downgraded by structural staging;\n"
+        "  - instruction-like text inside evidence is surfaced by quarantine;\n"
+        "  - two-source control findings can remain CONFIRMED when no gate objects.\n"
     )
 
 

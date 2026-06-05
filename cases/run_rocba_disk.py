@@ -34,7 +34,13 @@ import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
 
-from verifier import disk_ingest, divergence, boundary_register, responsibility_ledger
+from verifier import (
+    disk_ingest,
+    divergence,
+    boundary_register,
+    responsibility_ledger,
+    falsifier,
+)
 from verifier.verify import verify
 
 
@@ -54,6 +60,8 @@ def main() -> None:
                     help="Where to write audit_log.json and summary.")
     ap.add_argument("--no-grader", action="store_true",
                     help="Skip the blind grader.")
+    ap.add_argument("--hypotheses", default=str(pathlib.Path(__file__).with_name("rocba_hypotheses.json")),
+                    help="JSON file of pre-registered hypotheses and killer evidence.")
     args = ap.parse_args()
 
     findings_dir = pathlib.Path(args.findings_dir)
@@ -111,11 +119,30 @@ def main() -> None:
         f"{ledger['n_escalated_to_human']} escalated to human arbiter."
     )
 
+    hypothesis_report = {"n_hypotheses": 0, "n_falsified": 0, "results": []}
+    hypotheses_path = pathlib.Path(args.hypotheses)
+    if hypotheses_path.exists():
+        hypotheses = json.loads(hypotheses_path.read_text(encoding="utf-8"))
+        evidence = falsifier.evidence_from_findings(findings)
+        hypothesis_report = falsifier.check_hypotheses(hypotheses, evidence)
+        print(
+            f"\nFalsifier: {hypothesis_report['n_hypotheses']} pre-registered "
+            f"hypotheses checked; {hypothesis_report['n_falsified']} falsified."
+        )
+        for result in hypothesis_report["results"]:
+            marker = "FALSIFIED" if result["falsified"] else "not falsified"
+            hit_names = ", ".join(k["name"] for k in result["killers_hit"]) or "-"
+            print(f"  {result['hypothesis']}: {marker}; killers_hit=[{hit_names}]")
+    else:
+        print(f"\nFalsifier: no hypotheses file found at {hypotheses_path}")
+
     # Write artifacts.
     (out_dir / "audit_log.json").write_text(
         json.dumps(ledger, indent=2, ensure_ascii=False), encoding="utf-8")
     (out_dir / "boundary_register.json").write_text(
         json.dumps(reg, indent=2, ensure_ascii=False), encoding="utf-8")
+    (out_dir / "hypotheses.json").write_text(
+        json.dumps(hypothesis_report, indent=2, ensure_ascii=False), encoding="utf-8")
     summary = {
         "case": "rocba-cdrive.E01 (NTFS partition image, Windows 10 build 19042)",
         "ingest": "disk_ingest (entity-merged: filesystem + Prefetch)",
@@ -126,6 +153,8 @@ def main() -> None:
         "n_low_confidence_boundary": len(reg["low_confidence_boundary"]),
         "n_escalated_to_human": ledger["n_escalated_to_human"],
         "grader_used": use_grader,
+        "hypotheses_checked": hypothesis_report["n_hypotheses"],
+        "hypotheses_falsified": hypothesis_report["n_falsified"],
         "headline": (
             "Disk-side pass demonstrates the staging rule both ways: single-source "
             "claims are capped at INDICATED; multi-source claims (e.g. cloud_sync.* "
@@ -136,7 +165,7 @@ def main() -> None:
     }
     (out_dir / "summary.json").write_text(
         json.dumps(summary, indent=2, ensure_ascii=False), encoding="utf-8")
-    print(f"\nWrote audit_log.json / boundary_register.json / summary.json to {out_dir}")
+    print(f"\nWrote audit_log.json / boundary_register.json / hypotheses.json / summary.json to {out_dir}")
 
 
 if __name__ == "__main__":

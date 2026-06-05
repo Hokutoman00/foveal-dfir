@@ -77,10 +77,43 @@ def check_hypothesis(hypothesis: dict, evidence: list[dict]) -> dict:
             })
     return {
         "hypothesis": hypothesis.get("label"),
+        "description": hypothesis.get("description", ""),
         "n_killers_registered": len(hypothesis.get("killers", [])),
         "falsified": bool(killers_hit),
         "killers_hit": killers_hit,
         "killers_checked": killers_checked,
+    }
+
+
+def evidence_from_findings(findings: Iterable[dict]) -> list[dict]:
+    """Flatten finding observations, interpretations, and artifacts into evidence."""
+    evidence: list[dict] = []
+    for finding in findings:
+        fid = finding.get("id", "?")
+        text_parts = [
+            str(finding.get("observation") or ""),
+            str(finding.get("interpretation") or ""),
+        ]
+        if any(part.strip() for part in text_parts):
+            evidence.append({
+                "source": f"finding.{fid}.claim_text",
+                "content": "\n".join(part for part in text_parts if part.strip()),
+            })
+        for art in finding.get("artifacts", []):
+            evidence.append({
+                "source": art.get("source") or f"finding.{fid}.artifact",
+                "content": art.get("content") or "",
+            })
+    return evidence
+
+
+def check_hypotheses(hypotheses: Iterable[dict], evidence: list[dict]) -> dict:
+    """Check a list of pre-registered hypotheses against one evidence set."""
+    results = [check_hypothesis(h, evidence) for h in hypotheses]
+    return {
+        "n_hypotheses": len(results),
+        "n_falsified": sum(1 for r in results if r["falsified"]),
+        "results": results,
     }
 
 

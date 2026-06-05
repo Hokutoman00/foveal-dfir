@@ -1,0 +1,56 @@
+[
+  {
+    "label": "personal_cloud_sync_ip_staging",
+    "description": "Fred Rocba's host contains personal cloud-sync infrastructure and SRL-relevant documents consistent with IP staging or exfiltration risk.",
+    "killers": [
+      {
+        "name": "no_personal_cloud_sync_artifacts",
+        "mode": "absent_falsifies",
+        "pattern": "(Google Drive|iCloudDrive|iCloud|Dropbox|OneDrive|DropboxInstaller|Prefetch entries:.*(DROPBOX|ICLOUD|GOOGLEDRIVE|ONEDRIVE))",
+        "description": "If no personal cloud-sync folder, installer, or execution artifact is present, the cloud-sync staging hypothesis fails."
+      },
+      {
+        "name": "no_srl_relevant_document_names",
+        "mode": "absent_falsifies",
+        "pattern": "(SRL|VIBRANIUM|BusinessPlan|Offer|Firedam|HighFive)",
+        "description": "If no SRL-relevant or IP-like document names appear in the cloud-sync evidence, the IP-staging hypothesis fails."
+      }
+    ]
+  },
+  {
+    "label": "single_source_cloud_claims_should_not_be_confirmed",
+    "description": "Cloud-sync claims must not remain CONFIRMED when only one independent artifact source supports them.",
+    "killers": [
+      {
+        "name": "single_source_claims_exist",
+        "mode": "found_falsifies",
+        "pattern": "(sensitive_file\\.in_cloud|OneDrive cloud sync|File present in Google Drive folder)",
+        "description": "This is a control hypothesis: if single-source cloud claims are present, the hypothesis that all cloud claims are multi-source is falsified and staging must cap them."
+      }
+    ]
+  },
+  {
+    "label": "credential_theft",
+    "description": "Attacker or insider extracted credentials from Rocba's workstation via a credential-harvesting tool or LSASS dump. If no such tool or process artifact is present in Prefetch or disk evidence, the hypothesis fails.",
+    "killers": [
+      {
+        "name": "no_credential_harvest_tool",
+        "mode": "absent_falsifies",
+        "pattern": "(mimikatz|lsass|sekurlsa|wce\\.exe|pwdump|CREDENTIAL|SAM hive)",
+        "description": "If no credential-harvesting tool or LSASS-related artifact is present in Prefetch or disk evidence, the credential theft hypothesis is not supported by the available evidence."
+      }
+    ]
+  },
+  {
+    "label": "lateral_movement",
+    "description": "An attacker moved laterally to or from Rocba's workstation using remote-execution tools or protocols. If no remote-execution or lateral-movement artifact is found, the hypothesis fails.",
+    "killers": [
+      {
+        "name": "no_remote_execution_artifact",
+        "mode": "absent_falsifies",
+        "pattern": "(psexec|WMIC|at\\.exe|schtasks.*remote|winrm|\\bRDP\\b|MSTSC)",
+        "description": "If no remote-execution tool or protocol artifact is found in Prefetch or event-log evidence, lateral movement from or to this host is not supported by disk evidence alone."
+      }
+    ]
+  }
+]
