@@ -68,11 +68,32 @@ Not applicable in this run (grader disabled). With the grader enabled, this sect
 
 ## Actor-cadence analysis (agent-vs-agent)
 
-Not exercised in this baseline run: actor-cadence requires an event timeline (process-creation times across the case, network-connection timestamps, prefetch / event-log times), which is more naturally extracted from the disk image. Expected outcome on the ROCBA case: `HUMAN_LIKELY` (the scenario is a human break-in / IP theft). That is an honest result the assessor should produce; the architecture does not force `MACHINE_PACED`.
+**Exercised on ROCBA memory evidence** using 2,186 process-creation timestamps from `pslist.json` (range: 2020-11-11 to 2020-11-16).
+
+Result: **`AMBIGUOUS`**
+
+| Signal | Value | Interpretation |
+|--------|-------|---------------|
+| Coefficient of variation (CoV) | 0.757 > 0.35 threshold | Variable inter-event gaps → human-like timing |
+| Work-hour ratio | 0.60 < 0.85 threshold | 60% of events in 08:00–22:00 → 24/7-like signal |
+| Long-gap hesitations | 0 detected | Inconclusive |
+
+`AMBIGUOUS` is the honest result for this evidence slice. The high CoV (variable intervals) is consistent with a human operator, but the low work-hour ratio is contaminated by system processes that run continuously (svchost, smss, etc.). The signals conflict; the assessor does not force a verdict.
+
+**What this means for the ROCBA narrative**: The human-IP-theft scenario is *consistent with* the AMBIGUOUS verdict — the architecture correctly refuses to force `HUMAN_LIKELY` when the evidence is mixed. A filtered pass (incident-window-only process creation events, registry / Prefetch timestamps) would produce a sharper verdict. The architecture does not force `MACHINE_PACED` when the evidence doesn't warrant it — and it does not force `HUMAN_LIKELY` either.
 
 ## Falsifier checks
 
-Not exercised in this baseline run: pre-registered killer evidence is keyed to specific hypotheses ("data was exfiltrated to host X", "lsass was dumped via Y"). A targeted hypothesis pass against the case is the next step.
+Not exercised in the memory-only baseline run. The disk-side pass now checks pre-registered killer evidence from [cases/rocba_hypotheses.json](cases/rocba_hypotheses.json):
+
+| Hypothesis | Result | Killer signal |
+|---|---|---|
+| `personal_cloud_sync_ip_staging` | not falsified | Multi-source cloud-sync staging remains supported. |
+| `single_source_cloud_claims_should_not_be_confirmed` | **FALSIFIED** | Single-source cloud/file claims exist and are capped at `INDICATED`. |
+| `credential_theft` | **FALSIFIED** | No credential-harvest tool artifact in the disk slice. |
+| `lateral_movement` | **FALSIFIED** | No remote-execution artifact in the disk slice. |
+
+This is intentionally asymmetric: the system is allowed to say "this hypothesis survived this slice" and "these other hypotheses did not survive this slice" in the same report.
 
 ## Responsibility ledger summary
 
@@ -206,10 +227,10 @@ cat cases_outputs/rocba_disk_grader/summary.json
 
 ## What this run does NOT yet show
 
-The pillars NOT yet exercised on the Rocba memory case:
+The pillars NOT yet fully exercised on the Rocba case:
 
-- **Stereo fusion** at scale: the kill-chain reconstruction across both views needs a broader set of grader-divergent verdicts than this case produced; coming with the disk-image pass.
-- **Actor cadence + falsifier**: best exercised with the disk image (`rocba-cdrive.e01`) for event timelines and case-specific hypothesis killers. On this human-IP-theft scenario, the cadence assessor is expected to report `HUMAN_LIKELY` (a correct, honest outcome).
-- **Prior-fit anomaly**: needs the disk image for registry / event-log artifacts to score against a "normal Windows host" prior.
+- **Actor cadence**: exercised on pslist timestamps (AMBIGUOUS verdict, see above). A filtered pass over incident-window events only (Prefetch execution times, event-log timestamps) would produce a sharper signal.
+- **Prior-fit anomaly at real-case scale**: currently demonstrated in `run_prototype.py` and the adversarial samples; registry / event-log extraction would make it stronger on ROCBA itself.
+- **Stereo fusion at real-case scale**: currently reconstructs prototype kill-chain stages and labels rescued/downgraded findings; the ROCBA evidence slice still needs broader cross-view event extraction for a stronger binocular story.
 
-The disk image has finished downloading (23 GB final, integrity confirmed) and is queued for the next pass; the integrating pipeline is the same `cases/run_rocba.py` runner, fed by Sleuth Kit / registry / event-log extractors instead of Volatility plugins.
+The disk image is no longer just queued: the entity-merged disk pass is implemented in [cases/run_rocba_disk.py](cases/run_rocba_disk.py) and reproduced above. The remaining lift is deeper extraction, not first contact with the disk evidence.

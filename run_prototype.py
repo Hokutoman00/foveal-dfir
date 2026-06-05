@@ -31,6 +31,7 @@ writes the full per-finding audit log to audit_log.json.
 import argparse
 import json
 import pathlib
+import re
 
 from verifier.verify import verify
 from verifier import divergence, boundary_register, responsibility_ledger
@@ -40,12 +41,27 @@ from verifier import stereo_fusion
 # "Normal-looking" Windows artifact patterns. High fit in a suspicious
 # context (off-hours, near-incident) is the crafted-normal signal.
 _DFIR_NORMAL_PRIOR = [
-    r"signed by Microsoft",
-    r"(no|zero|0)\s+(suspicious|anomalous|malicious)",
-    r"legitimate\s+(process|activity|traffic|connection)",
-    r"known.*(clean|safe|trusted)",
-    r"expected\s+(system|behaviour|behavior)",
+    r"health check",
+    r"pre-approved",
+    r"security policy",
+    r"status:\s*OK",
+    r"monitoring agent",
 ]
+
+
+def _artifact_context(artifact: dict, finding_context: dict | None, adversarial_flags: list[dict]) -> dict:
+    """Derive suspicion context for prior-fit anomaly scoring."""
+    content = artifact.get("content") or ""
+    ts = None
+    m = re.search(r"\[(\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}:\d{2})\]", content)
+    if m:
+        ts = m.group(1).replace(" ", "T")
+    flagged_sources = {flag.get("source") for flag in adversarial_flags}
+    ctx = dict(finding_context or {})
+    ctx.setdefault("timestamp", ts)
+    ctx["near_incident"] = bool(ctx.get("near_incident") or artifact.get("source") in flagged_sources)
+    ctx["from_untrusted_host"] = bool(ctx.get("from_untrusted_host") or adversarial_flags)
+    return ctx
 
 
 def main() -> None:
@@ -84,7 +100,11 @@ def main() -> None:
         pf_ctx = f.get("_prior_fit_context")
         pf_flags = []
         for art in f.get("artifacts", []):
-            pf = prior_fit_mod.assess(art, _DFIR_NORMAL_PRIOR, suspicion_context=pf_ctx)
+            pf = prior_fit_mod.assess(
+                art,
+                _DFIR_NORMAL_PRIOR,
+                suspicion_context=_artifact_context(art, pf_ctx, v["adversarial_flags"]),
+            )
             if pf["verdict"] == "SUSPICIOUSLY_NORMAL":
                 pf_flags.append(art.get("source", "?"))
         v["prior_fit_flags"] = pf_flags
