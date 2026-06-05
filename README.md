@@ -24,6 +24,12 @@ The hackathon names its own open problem: an autonomous DFIR agent that "just sa
 
 A common DFIR-enforcement pattern lets a finding reach the top confidence label either by accumulating multiple corroborating observations *or* by a single observation that a validator labels "strongly corroborated". The single-strong path turns the floor on top confidence into an LLM judgment call. `foveal-dfir` rejects that path: the top label requires a structural floor of **N ≥ 2 distinct artifact sources, counted in code**, with no LLM-judgment escape hatch.
 
+### What a naive agent gets wrong on this case
+
+A standard heuristic agent examining the ROCBA memory image labels all 16 `malfind` findings `CONFIRMED` — the plugin names suspicious injected code and the agent trusts it. `foveal-dfir` runs the same findings through structural staging and finds that every one of those 16 carries exactly **one** independent artifact source (the `malfind` row itself). The rule is enforced in code: `CONFIRMED` requires ≥ 2. All 16 are downgraded to `INDICATED`.
+
+The independent blind grader, looking only at the raw evidence with no knowledge of the analyst's labels, also judges all 16 as `CONFIRMED` — and still loses to the structural rule. **The pipeline holds the line at `INDICATED` even when both observers want to relax to `CONFIRMED`.** This is the claim the strongest competitor's README states and its code does not enforce. We enforce it.
+
 Most submissions build a "more careful" agent. We build a structurally different one:
 
 1. **Blind independent grader (A/B principle).** A separate model judges each finding **from the raw evidence only**. It never sees the investigating agent's reasoning trace and is never told the claimed confidence — no anchoring. It re-derives, from evidence alone, what confidence is justified. ([verifier/grader.py](verifier/grader.py))
