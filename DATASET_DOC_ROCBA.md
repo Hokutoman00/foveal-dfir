@@ -30,7 +30,7 @@ The case is presented as a **human-operated IP-theft** scenario rather than an a
 | └─ `Rocba-Memory/Rocba-Memory.7z` |  5.3 GB | *(see below)* | --                       | 7z, LZMA2:24, single block.             |
 | └─ `Rocba-Memory.raw`      | 17.7 GB | *(see below)*| **yes**                    | Raw memory dump, 19,050,528,768 bytes.  |
 
-> Hashes are recorded at the time of integration. For the worked example only the memory image is read; the disk image is queued for the next pillar pass.
+> Hashes are recorded at the time of integration. The worked example now uses both the memory image and a disk-side entity-merged pass over selected Sleuth Kit `fls` listings from the E01.
 
 ## Host identification (Volatility3 `windows.info`)
 
@@ -113,7 +113,7 @@ Total candidate findings ingested: **4,818**. See [EXAMPLE_ACCURACY_REPORT_ROCBA
 
 ## What this dataset documentation does NOT cover
 
-- ~~The **disk side** (`rocba-cdrive.e01`, 22.1 GB) is queued for the next pass~~ — **resolved**. The disk pass is integrated via `verifier/disk_ingest.py` (parses Sleuth Kit `fls -f ntfs` listings from the user's Google Drive folder, iCloud folder, Downloads, and Windows Prefetch) and `cases/run_rocba_disk.py`. The entity-merged ingest unions findings sharing an id across sources, so the structural rule sees ≥2 distinct artifact sources for the multi-source entities (e.g. `cloud_sync.google_drive`, `cloud_sync.icloud`). Run with `python -m cases.run_rocba_disk --findings-dir cases_data/rocba_disk [--no-grader]`; the worked example is in [EXAMPLE_ACCURACY_REPORT_ROCBA.md](EXAMPLE_ACCURACY_REPORT_ROCBA.md).
+- **Disk side**. The disk pass is integrated via `verifier/disk_ingest.py` (parses Sleuth Kit `fls -f ntfs` listings from the user's Google Drive folder, iCloud folder, Downloads, and Windows Prefetch) and `cases/run_rocba_disk.py`. The entity-merged ingest unions findings sharing an id across sources, so the structural rule sees >=2 distinct artifact sources for the multi-source entities (e.g. `cloud_sync.google_drive`, `cloud_sync.icloud`). Run with `python -m cases.run_rocba_disk --findings-dir cases_data/rocba_disk [--no-grader]`; the worked example is in [EXAMPLE_ACCURACY_REPORT_ROCBA.md](EXAMPLE_ACCURACY_REPORT_ROCBA.md).
 - **Ground truth**. The hackathon brief is the only narrative we have; no ground-truth labels accompany the share at this writing. The accuracy report's false-positive matrix is therefore left blank in the baseline run; it will be populated when ground truth is available (or against a community-derived consensus).
 - **Cross-case generalization**. Numbers above describe the ROCBA case only; the `Compromised APT Attack Scenarios` folder (`SRL-2015`, `SRL-2018`) is out of scope for this run.
 

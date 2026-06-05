@@ -82,7 +82,8 @@ foveal-dfir/
 │   └── disk_ingest.py            # convert Sleuth Kit fls listings into entity-merged findings (disk pass)
 ├── cases/
 │   ├── run_rocba.py              # end-to-end driver: memory pass on the official ROCBA case
-│   └── run_rocba_disk.py         # end-to-end driver: disk pass (entity-merged) on the ROCBA E01
+│   ├── run_rocba_disk.py         # end-to-end driver: disk pass (entity-merged) on the ROCBA E01
+│   └── run_judge_demo.py         # one-command autonomous case loop for judges
 ├── run_prototype.py              # toy-sample entry point
 ├── ACCURACY_REPORT_TEMPLATE.md   # per-case report template
 ├── EXAMPLE_ACCURACY_REPORT_ROCBA.md  # worked example over the real ROCBA case
