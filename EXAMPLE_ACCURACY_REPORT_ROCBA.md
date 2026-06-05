@@ -68,19 +68,31 @@ Not applicable in this run (grader disabled). With the grader enabled, this sect
 
 ## Actor-cadence analysis (agent-vs-agent)
 
-**Exercised on ROCBA memory evidence** using 2,186 process-creation timestamps from `pslist.json` (range: 2020-11-11 to 2020-11-16).
+**Exercised on two ROCBA evidence slices** (range: 2020-11-11 to 2020-11-16).
 
-Result: **`AMBIGUOUS`**
+**Pass 1 — all process creation timestamps (`pslist.json`, 2,186 events)**
 
 | Signal | Value | Interpretation |
 |--------|-------|---------------|
-| Coefficient of variation (CoV) | 0.757 > 0.35 threshold | Variable inter-event gaps → human-like timing |
-| Work-hour ratio | 0.60 < 0.85 threshold | 60% of events in 08:00–22:00 → 24/7-like signal |
-| Long-gap hesitations | 0 detected | Inconclusive |
+| CoV | 0.757 > 0.35 | Variable intervals → human-like |
+| Work-hour ratio | 0.60 < 0.85 | System processes run 24/7 → ratio dragged down |
+| Long-gap hesitations | 0 | Inconclusive |
+| **Verdict** | **AMBIGUOUS** | Signals conflict; system-process contamination |
 
-`AMBIGUOUS` is the honest result for this evidence slice. The high CoV (variable intervals) is consistent with a human operator, but the low work-hour ratio is contaminated by system processes that run continuously (svchost, smss, etc.). The signals conflict; the assessor does not force a verdict.
+**Pass 2 — cloud-sync network connections only (`netscan.json`, 92 events)**
 
-**What this means for the ROCBA narrative**: The human-IP-theft scenario is *consistent with* the AMBIGUOUS verdict — the architecture correctly refuses to force `HUMAN_LIKELY` when the evidence is mixed. A filtered pass (incident-window-only process creation events, registry / Prefetch timestamps) would produce a sharper verdict. The architecture does not force `MACHINE_PACED` when the evidence doesn't warrant it — and it does not force `HUMAN_LIKELY` either.
+Filtered to: `googledrivesync`, `GoogleDriveFS`, `iCloudDrive`, `iCloudServices`, `iCloudPhotos`, `OneDrive`, `APSDaemon`, `ApplePhotoStream`. These represent the staging activity directly relevant to the IP-theft hypothesis.
+
+| Signal | Value | Interpretation |
+|--------|-------|---------------|
+| CoV | 3.154 > 0.35 | Extremely variable intervals → strongly human-like |
+| Long-gap hesitations | 31 | Rest/sleep/work patterns → human-like |
+| Work-hour ratio | 0.80 < 0.85 | Automatic background sync runs at night (iCloud at 01:xx–04:xx) → slightly below threshold |
+| **Verdict** | **AMBIGUOUS** | Human signals strong; automatic sync drags work-hour ratio below 0.85 cutoff |
+
+Both passes return `AMBIGUOUS` for structurally different reasons: Pass 1 is contaminated by always-on system processes; Pass 2 has strong human signals (CoV=3.154, 31 hesitations) but automatic overnight sync slightly pushes work-hour ratio below the threshold. The architecture honestly refuses `HUMAN_LIKELY` in both cases rather than over-claiming.
+
+**What this means for the ROCBA narrative**: The human-IP-theft scenario is *consistent with* AMBIGUOUS. A human actor staging files over 5 days, using cloud sync clients that also run automatic overnight backups, produces exactly this pattern. The cadence assessor does not force `MACHINE_PACED` (which would be wrong) and does not force `HUMAN_LIKELY` (which would require stronger evidence). AMBIGUOUS is the correct call when the evidence is genuinely mixed.
 
 ## Falsifier checks
 

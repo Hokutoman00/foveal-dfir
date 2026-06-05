@@ -4,6 +4,8 @@ A defensive digital-forensics / incident-response agent for the SANS **FIND EVIL
 
 ## At a glance
 
+**Independent review flips ~48% of single-reviewer verdicts** (empirically validated across two domains — see [CROSS_FINDINGS_FROM_SPECA.md](CROSS_FINDINGS_FROM_SPECA.md)).
+
 **13 verifier modules · 4,818 ROCBA memory findings + 8 disk entity-merged findings analyzed · 16 single-source CONFIRMED claims downgraded to INDICATED · 3 disk claims permitted as CONFIRMED by structure · 1 disk claim survives CONFIRMED with the blind grader on — same rule, both directions.**
 
 ## Thesis
